@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-fs="std">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>护肤手帐</title>
+<meta name="theme-color" content="#F6F6F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131715" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="护肤手帐">
+<style>
+:root{
+  --bg:#F6F6F1; --surface:#FFFFFF; --tint:#EEF0E3; --ink:#25322D; --muted:#7C847E; --faint:#A9AFA9; --line:#E4E5DD;
+  --accent:#2B4A42; --on-accent:#F3F1E4;
+  --soon:#A9742A; --soon-soft:#F5EBD8; --bad:#9E4747; --bad-soft:#F4E3E1;
+  --serif:"Songti SC","Noto Serif SC","Source Han Serif SC","Noto Serif CJK SC","STSong","SimSun",Georgia,"Times New Roman",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","MiSans","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --r:20px;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131715; --surface:#1B211E; --tint:#232B25; --ink:#E9ECE6; --muted:#8F9891; --faint:#69726C; --line:#2B332F;
+    --accent:#A9C7B6; --on-accent:#13211C;
+    --soon:#DDAA5E; --soon-soft:#33291A; --bad:#E08C88; --bad-soft:#3A2321;
+  }
+}
+html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html[data-fs="big"]{font-size:18px}
+html[data-fs="huge"]{font-size:20px}
+*,*::before,*::after{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  padding:env(safe-area-inset-top,0px) 0 calc(92px + env(safe-area-inset-bottom,0px));
+}
+button,input,select,textarea{font:inherit;color:inherit;margin:0}
+button{cursor:pointer;-webkit-appearance:none;appearance:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.num{font-variant-numeric:tabular-nums}
+svg.ic{width:22px;height:22px;display:block;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- 整体框架 ---------- */
+.side{display:none}
+main{max-width:1080px;margin:0 auto;padding:0 18px}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{
+  width:40px;height:40px;border-radius:12px;background:var(--accent);color:var(--on-accent);flex:none;
+  display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:20px;font-weight:700;line-height:1
+}
+.brand b{display:block;font-size:1.0625rem;font-weight:700;line-height:1.2;letter-spacing:.04em}
+.brand small{display:block;font-size:.625rem;letter-spacing:.22em;color:var(--muted);margin-top:3px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)}
+.topbar .tagline{display:none;color:var(--muted);font-size:.9375rem}
+.ghost{display:inline-flex;align-items:center;gap:8px;background:none;border:0;color:var(--muted);font-size:.875rem;min-height:44px;padding:0 4px}
+.ghost svg.ic{width:18px;height:18px}
+
+section.view{display:none;padding-top:26px}
+section.view.on{display:block}
+.eyebrow{font-size:.6875rem;letter-spacing:.24em;color:var(--muted);margin:0 0 8px}
+.title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+h1{font-family:var(--serif);font-weight:500;font-size:2rem;line-height:1.2;margin:0;letter-spacing:.02em}
+.sub{color:var(--muted);font-size:.9375rem;margin:8px 0 0}
+.cta{
+  display:none;align-items:center;gap:10px;background:var(--accent);color:var(--on-accent);border:0;
+  border-radius:14px;padding:0 22px;height:52px;font-size:1rem;white-space:nowrap
+}
+.cta svg.ic{width:20px;height:20px}
+
+/* ---------- 概览 ---------- */
+.stats{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:22px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden
+}
+.stat{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:none;border:0;border-left:1px solid var(--line);padding:16px 14px;min-width:0}
+@supports (grid-template-rows:subgrid){.stats{grid-template-rows:auto auto auto}.stat{display:grid;grid-row:span 3;grid-template-rows:subgrid;align-items:start;justify-items:start}}
+.stat:first-child{border-left:0}
+.stat.mid{background:var(--tint)}
+.stat .lab{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;font-size:.75rem;color:var(--muted)}
+.stat .lab svg.ic{display:none;width:18px;height:18px}
+.stat b{font-family:var(--serif);font-weight:500;font-size:2.125rem;line-height:1.1;margin-top:12px;letter-spacing:.02em}
+.stat .cap{font-size:.6875rem;color:var(--muted);margin-top:8px;line-height:1.4}
+.stat .cap.warn{color:var(--bad)}
+
+/* ---------- 列表区 ---------- */
+.sec-head{display:flex;align-items:center;gap:10px;margin:30px 0 14px}
+.sec-head h2{font-size:1.25rem;font-weight:700;margin:0;letter-spacing:.02em}
+.count{font-size:.75rem;background:var(--tint);color:var(--ink);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+.field{
+  display:block;width:100%;min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  border-radius:12px;padding:0 14px;height:46px;font-size:max(16px,.9375rem);-webkit-appearance:none;appearance:none
+}
+.field::placeholder{color:var(--faint)}
+.field:focus{outline:0;border-color:var(--accent)}
+.searchbox{position:relative}
+.searchbox svg.ic{position:absolute;left:14px;top:50%;margin-top:-9px;width:18px;height:18px;color:var(--faint);pointer-events:none}
+.searchbox .field{padding-left:40px}
+select.field{
+  padding-right:36px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.500l5 5 5-5' fill='none' stroke='%237C847E' stroke-width='1.500' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;background-size:12px 8px
+}
+.ftabs{display:flex;gap:22px;margin-top:14px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.ftabs::-webkit-scrollbar{display:none}
+.ftabs button{
+  flex:none;background:none;border:0;padding:10px 0 12px;font-size:.9375rem;color:var(--muted);
+  border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap
+}
+.ftabs button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;list-style:none;margin:18px 0 0;padding:0}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.pmain{display:flex;flex-direction:column;align-items:stretch;text-align:left;background:none;border:0;padding:0;width:100%;flex:1}
+.ph{position:relative;display:block;width:100%;aspect-ratio:4/5;background:var(--tint);overflow:hidden}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.ph .init{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:3rem;color:var(--accent);opacity:.35}
+.archived .ph img{filter:grayscale(.7);opacity:.8}
+.tag,.pao{
+  position:absolute;font-size:.6875rem;line-height:1;padding:6px 10px;border-radius:999px;
+  background:rgba(250,249,243,.9);color:#3A4A43;white-space:nowrap
+}
+.tag{left:10px;top:10px}
+.pao{right:10px;bottom:10px;font-family:var(--serif);font-size:.8125rem;border-radius:8px;padding:5px 8px}
+.pbody{display:block;padding:12px 12px 14px}
+.pbrand{display:block;font-size:.6875rem;letter-spacing:.06em;color:var(--muted);min-height:1.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pname{
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  font-family:var(--serif);font-size:1rem;font-weight:600;line-height:1.35;margin-top:2px;min-height:2.7em;overflow-wrap:anywhere
+}
+.pstat{display:flex;align-items:baseline;gap:6px;margin-top:10px;font-size:.8125rem;color:var(--accent);white-space:nowrap}
+.pstat b{font-family:var(--serif);font-size:1.25rem;font-weight:600;line-height:1}
+.s-soon .pstat{color:var(--soon)} .s-bad .pstat{color:var(--bad)} .s-none .pstat{color:var(--muted)}
+.bar{display:block;height:3px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:10px}
+.bar>span{display:block;height:100%;background:var(--accent)}
+.s-soon .bar>span{background:var(--soon)} .s-bad .bar>span{background:var(--bad)}
+.pdate{display:block;font-size:.6875rem;color:var(--muted);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfoot{padding:0 12px 12px}
+.pill-btn{
+  display:flex;align-items:center;justify-content:center;width:100%;height:38px;border-radius:999px;
+  background:var(--tint);color:var(--ink);border:0;font-size:.8125rem
+}
+.empty{
+  grid-column:1/-1;border:1px dashed var(--line);border-radius:var(--r);padding:36px 20px;
+  color:var(--muted);font-size:.9375rem;text-align:center;list-style:none
+}
+
+/* ---------- 提醒 / 记录 ---------- */
+.block{margin-top:26px}
+.block h2{font-size:1rem;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.dot.soon{background:var(--soon)} .dot.bad{background:var(--bad)} .dot.none{background:var(--faint)}
+.rows{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.rows li+li{border-top:1px solid var(--line)}
+.rrow{
+  display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;
+  width:100%;text-align:left;background:none;border:0;padding:12px 14px
+}
+.thumb{position:relative;width:52px;height:52px;border-radius:12px;background:var(--tint);overflow:hidden;display:block}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.thumb .init{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.25rem;color:var(--accent);opacity:.45}
+.rname{display:block;font-family:var(--serif);font-weight:600;font-size:1rem;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rsub{display:block;font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rnum{text-align:right;white-space:nowrap;font-size:.75rem;color:var(--accent)}
+.rnum b{font-family:var(--serif);font-size:1.375rem;font-weight:600;line-height:1;margin-right:3px}
+.s-soon .rnum{color:var(--soon)} .s-bad .rnum{color:var(--bad)} .s-none .rnum{color:var(--muted)}
+
+.cats{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 16px}
+.cat{display:grid;grid-template-columns:5.5em minmax(0,1fr) 2em;gap:12px;align-items:center;padding:9px 0;font-size:.875rem}
+.cat .track{height:6px;border-radius:6px;background:var(--tint);overflow:hidden}
+.cat .track span{display:block;height:100%;background:var(--accent);border-radius:6px}
+.cat em{font-style:normal;text-align:right;color:var(--muted)}
+.tl{list-style:none;margin:0;padding:4px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.tl li{display:grid;grid-template-columns:5.6em minmax(0,1fr);gap:12px;padding:12px 0;font-size:.875rem;align-items:baseline}
+.tl li+li{border-top:1px solid var(--line)}
+.tl time{color:var(--muted);font-size:.75rem}
+.tl span{overflow-wrap:anywhere}
+.tl i{font-style:normal;color:var(--muted)}
+
+/* ---------- 设置 ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 16px;margin-top:14px;display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.panel h2{margin:0;font-size:1rem;font-weight:700}
+.panel p{margin:0;font-size:.8125rem;color:var(--muted)}
+.inline{display:grid;grid-template-columns:minmax(0,1fr) 92px;align-items:center;gap:12px}
+.inline .field{text-align:center;padding:0 8px}
+.btn{
+  display:flex;align-items:center;justify-content:center;width:100%;min-height:46px;padding:8px 16px;
+  border:1px solid var(--line);background:var(--surface);border-radius:12px;font-size:.9375rem;line-height:1.3;text-align:center
+}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.danger{color:var(--bad);border-color:transparent;background:transparent}
+.choice{display:grid;gap:8px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.choice.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.choice button{
+  display:flex;align-items:center;justify-content:center;height:42px;padding:0;
+  border:1px solid var(--line);background:var(--bg);border-radius:12px;font-size:.9375rem;color:var(--ink)
+}
+.choice button.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+/* ---------- 手机底部导航 ---------- */
+nav.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:4;background:var(--surface);
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)
+}
+nav.tabs .in{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;max-width:560px;margin:0 auto}
+nav.tabs button{
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  background:none;border:0;padding:0;height:62px;font-size:.6875rem;line-height:1;color:var(--muted)
+}
+nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
+nav.tabs .add{color:var(--on-accent)}
+nav.tabs .add span{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:16px;background:var(--accent)}
+.badge{position:absolute;top:10px;left:50%;margin-left:8px;width:8px;height:8px;border-radius:50%;background:var(--bad);border:1.5px solid var(--surface);box-sizing:content-box}
+.side .badge{position:static;margin:0 0 0 auto;border:0}
+
+/* ---------- 表单弹层 ---------- */
+dialog{
+  border:0;padding:0;margin:0;background:var(--bg);color:var(--ink);
+  width:100vw;max-width:100vw;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;
+  overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain
+}
+dialog::backdrop{background:rgba(15,22,20,.5)}
+.dlg-head{
+  position:sticky;top:0;z-index:2;background:var(--bg);
+  display:grid;grid-template-columns:72px minmax(0,1fr) 72px;align-items:center;
+  padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;border-bottom:1px solid var(--line)
+}
+.dlg-head h2{margin:0;font-family:var(--serif);font-size:1.125rem;font-weight:600;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlg-head button{background:none;border:0;min-height:44px;padding:0 4px;font-size:1rem;color:var(--muted);text-align:left}
+.dlg-head button[type=submit]{color:var(--accent);font-weight:700;text-align:right}
+.dlg-body{padding:16px 16px calc(28px + env(safe-area-inset-bottom,0px));display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+.group{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+.f{display:grid;gap:6px;grid-template-columns:minmax(0,1fr);font-size:.8125rem;color:var(--muted);border:0;padding:0;margin:0;min-width:0}
+fieldset.f legend{padding:0;margin:0 0 6px;float:left;width:100%}
+fieldset.f legend+*{clear:both}
+.f .field{background:var(--bg)}
+.f textarea.field{height:auto;padding:10px 14px;resize:none;line-height:1.5}
+.f input[type=date].field{text-align:left}
+.f input::-webkit-date-and-time-value{text-align:left;margin:0}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.seg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px;background:var(--bg);border-radius:12px;padding:4px}
+.seg label{position:relative;display:block}
+.seg input{position:absolute;opacity:0;inset:0;width:100%;height:100%;padding:0;border:0}
+.seg span{display:flex;align-items:center;justify-content:center;height:38px;border-radius:9px;color:var(--muted);font-size:.9375rem}
+.seg input:checked+span{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(30,36,34,.14)}
+.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:.8125rem;color:var(--muted);margin:0}
+.preview{background:var(--tint);color:var(--ink);border-radius:14px;padding:12px 14px;font-size:.9375rem;text-align:center}
+.photo-row{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;align-items:center}
+.photo-box{position:relative;width:96px;height:120px;border-radius:14px;background:var(--tint);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--faint)}
+.photo-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo-box svg.ic{width:28px;height:28px}
+.photo-acts{display:grid;gap:8px;grid-template-columns:minmax(0,1fr)}
+.acts{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+
+#toast{
+  position:fixed;left:16px;right:16px;bottom:calc(110px + env(safe-area-inset-bottom,0px));
+  margin:0 auto;width:fit-content;max-width:calc(100vw - 32px);
+  background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.875rem;
+  opacity:0;pointer-events:none;transition:opacity .2s;z-index:2147483647;text-align:center
+}
+#toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+
+/* ---------- 平板 / 电脑 ---------- */
+@media (min-width:640px){
+  main{padding:0 28px}
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .stat{padding:22px 24px}
+  .stat .lab{font-size:.875rem}
+  .stat .lab svg.ic{display:block}
+  .stat b{font-size:2.75rem;margin-top:18px}
+  .stat .cap{font-size:.8125rem}
+  .tools{grid-template-columns:minmax(0,1fr) 180px}
+  dialog{width:540px;height:auto;max-height:90dvh;margin:auto;border-radius:24px}
+}
+@media (min-width:960px){
+  body{padding-bottom:40px}
+  nav.tabs{display:none}
+  .side{
+    display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:264px;
+    background:var(--surface);border-right:1px solid var(--line);padding:36px 20px 24px
+  }
+  .side .brand{padding:0 6px}
+  .side .eyebrow{margin:56px 0 14px 18px}
+  .side nav{display:grid;gap:6px}
+  .side nav button{
+    display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:none;border:0;
+    border-radius:12px;padding:0 18px;height:56px;font-size:1rem;color:var(--muted)
+  }
+  .side nav button[aria-current="page"]{background:var(--tint);color:var(--ink);font-weight:700}
+  .side .foot{margin-top:auto;border-top:1px solid var(--line);padding:18px 6px 0;font-size:.8125rem;color:var(--muted)}
+  .side .foot b{display:block;color:var(--ink);font-weight:500;font-size:.9375rem;margin-bottom:2px}
+  body{padding-left:264px}
+  main{padding:0 44px}
+  .topbar{padding:22px 0}
+  .topbar .brand{display:none}
+  .topbar .tagline{display:block}
+  .cta{display:inline-flex}
+  h1{font-size:2.5rem}
+  .grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  section.view{padding-top:44px}
+  .narrow{max-width:720px}
+}
+</style>
+</head>
+<body>
+
+<aside class="side">
+  <div class="brand"><span class="mark" aria-hidden="true">肤</span><span><b>护肤手帐</b><small>SKINCARE NOTES</small></span></div>
+  <p class="eyebrow">MY CABINET</p>
+  <nav aria-label="主导航">
+    <button type="button" data-view="home" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.500" height="6.500" rx="1.500"/><rect x="13.500" y="4" width="6.500" height="6.500" rx="1.500"/><rect x="4" y="13.500" width="6.500" height="6.500" rx="1.500"/><rect x="13.500" y="13.500" width="6.500" height="6.500" rx="1.500"/></svg>我的护肤品</button>
+    <button type="button" data-view="remind"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.500 16.500V11a5.500 5.500 0 0 1 11 0v5.500l1.500 2h-14z"/><path d="M10 20.500h4"/></svg>期限提醒<span class="badge" data-badge hidden></span></button>
+    <button type="button" data-view="log"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19v-5M12 19V5M18 19v-9"/></svg>使用记录</button>
+    <button type="button" data-view="settings"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.500h9M17 7.500h3M4 16.500h3M11 16.500h9"/><circle cx="15" cy="7.500" r="2"/><circle cx="9" cy="16.500" r="2"/></svg>设置与备份</button>
+  </nav>
+  <div class="foot"><b>记录只存在这台设备</b>换设备前，先到“设置与备份”导出。</div>
+</aside>
+
+<main>
+  <div class="topbar">
+    <div class="brand"><span class="mark" aria-hidden="true">肤</span><span><b>护肤手帐</b><small>SKINCARE NOTES</small></span></div>
+    <span class="tagline">记下开封那天，把每一瓶好好用完。</span>
+    <button class="ghost" type="button" data-goto="settings"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10.500l4 4 4-4M5 19.500h14"/></svg>备份</button>
+  </div>
+
+  <section class="view on" id="v-home" aria-labelledby="h-home">
+    <p class="eyebrow">THE EVERYDAY SHELF</p>
+    <div class="title-row">
+      <h1 id="h-home">我的护肤品柜</h1>
+      <button class="cta" type="button" data-add><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>添加产品</button>
+    </div>
+    <p class="sub" id="todayLine"></p>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="sec-head"><h2>日常收藏</h2><span class="count num" id="shownCount"></span></div>
+    <div class="tools">
+      <div class="searchbox">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.500"/><path d="M16 16l4 4"/></svg>
+        <label class="sr" for="q">搜索品牌或产品</label>
+        <input class="field" id="q" type="search" placeholder="搜索品牌、产品">
+      </div>
+      <div><label class="sr" for="catFilter">按类别筛选</label><select class="field" id="catFilter"></select></div>
+    </div>
+    <div class="ftabs" id="ftabs" role="group" aria-label="按状态筛选"></div>
+    <ul class="grid" id="grid"></ul>
+  </section>
+
+  <section class="view narrow" id="v-remind" aria-labelledby="h-remind">
+    <p class="eyebrow">REMINDERS</p>
+    <h1 id="h-remind">期限提醒</h1>
+    <p class="sub">按到期先后排好，最该先用的在最上面。</p>
+    <div id="remindBody"></div>
+    <div class="panel">
+      <h2>让手机日历来提醒</h2>
+      <p>网页不能在后台弹通知。把到期日导出成日历文件，加进手机日历后，由日历按时提醒。</p>
+      <button class="btn" id="icsAll" type="button">导出全部到期日到日历</button>
+    </div>
+  </section>
+
+  <section class="view narrow" id="v-log" aria-labelledby="h-log">
+    <p class="eyebrow">JOURNAL</p>
+    <h1 id="h-log">使用记录</h1>
+    <p class="sub">回头看看，哪些真的用完了。</p>
+    <div class="stats" id="logStats"></div>
+    <div class="block" id="catBlock"><h2>现有的都是什么</h2><div class="cats" id="cats"></div></div>
+    <div class="block"><h2>最近的动态</h2><ul class="tl" id="timeline"></ul></div>
+  </section>
+
+  <section class="view narrow" id="v-settings" aria-labelledby="h-settings">
+    <p class="eyebrow">SETTINGS</p>
+    <h1 id="h-settings">设置与备份</h1>
+    <div class="panel">
+      <div class="inline">
+        <div><h2>临期提醒</h2><p>到期前多少天开始算“临期”</p></div>
+        <input class="field" id="setWarn" type="number" min="1" max="365" inputmode="numeric" aria-label="提前天数">
+      </div>
+    </div>
+    <div class="panel">
+      <h2>字号</h2>
+      <div class="choice three" id="setSize">
+        <button type="button" data-fs="std">标准</button>
+        <button type="button" data-fs="big">大</button>
+        <button type="button" data-fs="huge">特大</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>备份与换设备</h2>
+      <p>记录和照片只存在这台设备的这个浏览器里，不会自动同步到别的设备。想在另一台设备上用，或者担心丢失：在这里导出备份文件，到另一台设备上恢复。</p>
+      <button class="btn" id="exportBtn" type="button">导出备份文件（含照片）</button>
+      <button class="btn" id="importBtn" type="button">从备份文件恢复</button>
+      <input id="importFile" type="file" accept="application/json,.json" hidden>
+    </div>
+    <div class="panel">
+      <h2>放到手机桌面</h2>
+      <p>iPhone：用 Safari 打开，点分享按钮，选“添加到主屏幕”。<br>安卓：用 Chrome 打开，点右上角菜单，选“添加到主屏幕”或“安装应用”。之后没有网络也能打开。</p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="主导航"><div class="in">
+  <button type="button" data-view="home" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.500" height="6.500" rx="1.500"/><rect x="13.500" y="4" width="6.500" height="6.500" rx="1.500"/><rect x="4" y="13.500" width="6.500" height="6.500" rx="1.500"/><rect x="13.500" y="13.500" width="6.500" height="6.500" rx="1.500"/></svg>护肤品</button>
+  <button type="button" data-view="remind"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.500 16.500V11a5.500 5.500 0 0 1 11 0v5.500l1.500 2h-14z"/><path d="M10 20.500h4"/></svg>提醒<span class="badge" data-badge hidden></span></button>
+  <button type="button" class="add" data-add aria-label="添加产品"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></button>
+  <button type="button" data-view="log"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19v-5M12 19V5M18 19v-9"/></svg>记录</button>
+  <button type="button" data-view="settings"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.500h9M17 7.500h3M4 16.500h3M11 16.500h9"/><circle cx="15" cy="7.500" r="2"/><circle cx="9" cy="16.500" r="2"/></svg>设置</button>
+</div></nav>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <form id="form" novalidate>
+    <div class="dlg-head">
+      <button type="button" id="dlgClose">取消</button>
+      <h2 id="dlgTitle">添加产品</h2>
+      <button type="submit">保存</button>
+    </div>
+    <div class="dlg-body">
+      <div class="group">
+        <div class="photo-row">
+          <div class="photo-box" id="photoBox"></div>
+          <div class="photo-acts">
+            <button class="btn" type="button" id="photoPick">拍照或选一张照片</button>
+            <button class="btn danger" type="button" id="photoDrop" hidden>移除照片</button>
+            <input id="photoFile" type="file" accept="image/*" hidden>
+          </div>
+        </div>
+        <label class="f">产品名称
+          <input class="field" id="f-name" required maxlength="60" autocomplete="off" placeholder="例如：保湿精华">
+        </label>
+        <div class="two">
+          <label class="f">品牌
+            <input class="field" id="f-brand" maxlength="40" autocomplete="off" placeholder="选填">
+          </label>
+          <label class="f">类别
+            <select class="field" id="f-cat"></select>
+          </label>
+        </div>
+      </div>
+
+      <div class="group">
+        <fieldset class="f">
+          <legend>现在的状态</legend>
+          <div class="seg">
+            <label><input type="radio" name="st" value="open" checked><span>已开封</span></label>
+            <label><input type="radio" name="st" value="sealed"><span>未开封</span></label>
+          </div>
+        </fieldset>
+        <label class="f" id="openedWrap">开封日期
+          <input class="field" id="f-opened" type="date">
+        </label>
+        <fieldset class="f">
+          <legend>开封后可用几个月</legend>
+          <div class="choice" id="paoChips"></div>
+        </fieldset>
+        <p class="hint">瓶身上开盖小罐子图标里的数字，例如 12M 就是 12 个月。不知道可以不选。</p>
+        <label class="f">包装上印的到期日（选填）
+          <input class="field" id="f-best" type="date">
+        </label>
+        <p class="hint">两个都填时，按较早的那个算到期。</p>
+      </div>
+
+      <div class="preview" id="preview" hidden></div>
+
+      <div class="group">
+        <label class="f">备注
+          <textarea class="field" id="f-note" rows="2" maxlength="200" placeholder="放在哪里、用后感受等"></textarea>
+        </label>
+      </div>
+
+      <div id="existingActions" hidden class="acts">
+        <button class="btn primary" type="button" data-act="openNow" id="actOpenNow">今天开封</button>
+        <button class="btn" type="button" data-act="done" id="actDone">用完了</button>
+        <button class="btn" type="button" data-act="tossed" id="actTossed">没用完，丢掉了</button>
+        <button class="btn" type="button" data-act="restore" id="actRestore">放回护肤品柜继续用</button>
+        <button class="btn" type="button" data-act="ics" id="actIcs">把到期日加到手机日历</button>
+        <button class="btn danger" type="button" data-act="delete">删除这条记录</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+var KEY='skincare.v1';
+var CATS=['洁面','卸妆','化妆水','精华','乳液面霜','眼霜','防晒','面膜','彩妆','身体护理','头发护理','其他'];
+var PAOS=[3,6,9,12,18,24,36];
+var FS=['std','big','huge'];
+var $=function(id){return document.getElementById(id)};
+var IC={
+  leaf:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c0-8 5-13 14-14 0 9-5 14-14 14zM5 19l7-7"/></svg>',
+  bell:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.500 16.500V11a5.500 5.500 0 0 1 11 0v5.500l1.500 2h-14z"/><path d="M10 20.500h4"/></svg>',
+  box:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.500l8-4 8 4v7l-8 4-8-4z"/><path d="M4 8.500l8 4 8-4M12 12.500v7"/></svg>',
+  cam:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.500h3.500l1.500-2.500h6l1.500 2.500H20v10H4z"/><circle cx="12" cy="13" r="3.200"/></svg>'
+};
+
+/* ---------- 数据 ---------- */
+function fixSettings(s){
+  s=Object.assign({warn:30,fs:'std'},s||{});
+  if(FS.indexOf(s.fs)<0)s.fs='std';
+  return s;
+}
+function load(){
+  try{
+    var d=JSON.parse(localStorage.getItem(KEY));
+    if(d&&Array.isArray(d.items)){d.settings=fixSettings(d.settings);return d}
+  }catch(e){}
+  return {items:[],settings:fixSettings()};
+}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(db))}
+  catch(e){toast('保存失败：浏览器不允许存储，请检查是否处于无痕模式')}
+}
+var db=load();
+var ui={view:'home',tab:'all',cat:'',q:'',editing:null};
+
+/* ---------- 照片（存在 IndexedDB，不占 localStorage 空间） ---------- */
+var photos={}, idbP=null;
+function idb(){
+  if(!idbP)idbP=new Promise(function(res,rej){
+    if(!('indexedDB' in window)){rej(new Error('no idb'));return}
+    var r=indexedDB.open('skincare',1);
+    r.onupgradeneeded=function(){r.result.createObjectStore('photos')};
+    r.onsuccess=function(){res(r.result)};
+    r.onerror=function(){rej(r.error)};
+  });
+  return idbP;
+}
+function photoTx(fn){
+  return idb().then(function(d){return new Promise(function(res,rej){
+    var tx=d.transaction('photos','readwrite');fn(tx.objectStore('photos'));
+    tx.oncomplete=function(){res()};tx.onerror=function(){rej(tx.error)};tx.onabort=function(){rej(tx.error)};
+  })});
+}
+function photoLoadAll(){
+  return idb().then(function(d){return new Promise(function(res,rej){
+    var out={},c=d.transaction('photos').objectStore('photos').openCursor();
+    c.onsuccess=function(){var cur=c.result;if(cur){out[cur.key]=cur.value;cur.continue()}else res(out)};
+    c.onerror=function(){rej(c.error)};
+  })});
+}
+function photoSet(id,data){
+  if(data)photos[id]=data;else delete photos[id];
+  return photoTx(function(s){if(data)s.put(data,id);else s.delete(id)})
+    .catch(function(){toast('照片没能保存到这台设备，其余信息已保存')});
+}
+function shrink(file){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(file),img=new Image();
+    img.onload=function(){
+      var max=900,k=Math.min(1,max/Math.max(img.width,img.height));
+      var c=document.createElement('canvas');
+      c.width=Math.max(1,Math.round(img.width*k));c.height=Math.max(1,Math.round(img.height*k));
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);
+      try{res(c.toDataURL('image/jpeg',.8))}catch(e){rej(e)}
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('bad image'))};
+    img.src=url;
+  });
+}
+
+/* ---------- 日期 ---------- */
+function pad(n){return (n<10?'0':'')+n}
+function parse(s){var a=String(s).split('-');return new Date(+a[0],+a[1]-1,+a[2])}
+function fmt(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function nice(d){return d.getFullYear()+' 年 '+(d.getMonth()+1)+' 月 '+d.getDate()+' 日'}
+function today(){var n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate())}
+function addMonths(d,n){
+  var r=new Date(d.getFullYear(),d.getMonth()+n,1);
+  var last=new Date(r.getFullYear(),r.getMonth()+1,0).getDate();
+  r.setDate(Math.min(d.getDate(),last));return r;
+}
+function diffDays(a,b){return Math.round((a-b)/864e5)}
+
+/* 到期日：开封日+月数 与 包装到期日，取较早者 */
+function expiryOf(p){
+  var c=[];
+  if(p.status!=='sealed'&&p.opened&&p.pao)c.push({d:addMonths(parse(p.opened),+p.pao),why:'开封后 '+p.pao+' 个月'});
+  if(p.bestBefore)c.push({d:parse(p.bestBefore),why:'包装到期日'});
+  if(!c.length)return null;
+  c.sort(function(x,y){return x.d-y.d});
+  return c[0];
+}
+function stateOf(p){
+  var e=expiryOf(p);
+  if(!e)return {cls:'s-none',days:null,e:null};
+  var days=diffDays(e.d,today());
+  return {cls:days<0?'s-bad':(days<=db.settings.warn?'s-soon':'s-ok'),days:days,e:e};
+}
+function leftParts(days){
+  if(days===null)return {label:'',num:'',unit:''};
+  if(days<0)return {label:'超期',num:-days,unit:'天'};
+  if(days===0)return {label:'',num:'今天',unit:'到期'};
+  if(days<=90)return {label:'还剩',num:days,unit:'天'};
+  return {label:'还剩约',num:Math.floor(days/30.4),unit:'个月'};
+}
+function leftText(days){
+  if(days===null)return '没有到期信息';
+  var p=leftParts(days);
+  return (p.label?p.label+' ':'')+p.num+' '+p.unit;
+}
+function isActive(p){return p.status==='open'||p.status==='sealed'}
+function isEnded(p){return p.status==='done'||p.status==='tossed'}
+
+/* ---------- 小工具 ---------- */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+var dlg=$('dlg'),toastTimer;
+function toast(msg){
+  var t=$('toast');
+  (dlg.open?dlg:document.body).appendChild(t);
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show')},2800);
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function download(name,text,type){
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type:type}));
+  a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);
+}
+function two(n){return n<10?'0'+n:''+n}
+function find(id){for(var i=0;i<db.items.length;i++)if(db.items[i].id===id)return db.items[i];return null}
+function pic(p){
+  return photos[p.id]?'<img src="'+photos[p.id]+'" alt="" loading="lazy">'
+    :'<span class="init" aria-hidden="true">'+esc((p.name||'肤').trim().charAt(0))+'</span>';
+}
+function sortKey(p){var s=stateOf(p);return s.days===null?1e9:s.days}
+
+/* ---------- 护肤品柜 ---------- */
+function card(p){
+  var s=stateOf(p),ended=isEnded(p),cls=ended?'s-none archived':s.cls;
+  var stat,date,bar='';
+  if(ended){
+    stat=p.status==='done'?'已用完':'没用完，已丢弃';
+    date=p.ended?p.ended+' 归档':'';
+  }else if(s.e){
+    var lp=leftParts(s.days);
+    stat=(lp.label?lp.label+' ':'')+'<b class="num">'+lp.num+'</b> '+lp.unit;
+    date=fmt(s.e.d)+' 到期';
+    if(p.status==='open'&&p.opened){
+      var total=diffDays(s.e.d,parse(p.opened));
+      var used=total>0?Math.max(0,Math.min(1,1-s.days/total)):1;
+      bar='<span class="bar"><span style="width:'+Math.round(used*100)+'%"></span></span>';
+    }
+  }else{
+    stat=p.status==='sealed'?'未开封':'还没填可用月数';
+    date=p.status==='sealed'?'开封后开始计时':'点开补充';
+  }
+  if(p.status==='sealed'&&s.e)date='未开封，'+date;
+  var h='<li class="pcard '+cls+'"><button class="pmain" type="button" data-id="'+p.id+'">'+
+    '<span class="ph">'+pic(p)+(p.cat?'<span class="tag">'+esc(p.cat)+'</span>':'')+
+    (p.pao?'<span class="pao num">'+p.pao+'M</span>':'')+'</span>'+
+    '<span class="pbody"><span class="pbrand">'+esc(p.brand||'')+'</span>'+
+    '<span class="pname">'+esc(p.name)+'</span>'+
+    '<span class="pstat">'+stat+'</span>'+bar+
+    '<span class="pdate num">'+esc(date)+'</span></span></button>';
+  if(p.status==='sealed')h+='<div class="pfoot"><button class="pill-btn" type="button" data-open-now="'+p.id+'">今天开封</button></div>';
+  return h+'</li>';
+}
+var TABS=[['all','全部'],['open','使用中'],['sealed','未开封'],['due','临期 / 超期'],['archived','已归档']];
+function renderHome(){
+  var items=db.items,active=items.filter(isActive);
+  var open=active.filter(function(p){return p.status==='open'});
+  var sealed=active.filter(function(p){return p.status==='sealed'});
+  var nSoon=0,nBad=0;
+  active.forEach(function(p){var c=stateOf(p).cls;if(c==='s-soon')nSoon++;else if(c==='s-bad')nBad++});
+
+  $('todayLine').textContent='今天是 '+nice(today())+'。好好使用，慢慢用完。';
+  $('stats').innerHTML=
+    '<button type="button" class="stat" data-tab="open"><span class="lab">正在使用'+IC.leaf+'</span><b class="num">'+two(open.length)+'</b><span class="cap">件每天在用</span></button>'+
+    '<button type="button" class="stat mid" data-tab="due"><span class="lab">'+db.settings.warn+' 天内到期'+IC.bell+'</span><b class="num">'+two(nSoon)+'</b><span class="cap'+(nBad?' warn':'')+'">'+(nBad?'另有 '+nBad+' 件已超期':'其余都还在期限内')+'</span></button>'+
+    '<button type="button" class="stat" data-tab="sealed"><span class="lab">未开封库存'+IC.box+'</span><b class="num">'+two(sealed.length)+'</b><span class="cap">件还没拆封</span></button>';
+
+  $('ftabs').innerHTML=TABS.map(function(t){
+    return '<button type="button" data-tab="'+t[0]+'" aria-pressed="'+(ui.tab===t[0])+'">'+t[1]+'</button>';
+  }).join('');
+
+  var q=ui.q.trim().toLowerCase();
+  var shown=items.filter(function(p){
+    var c=stateOf(p).cls;
+    if(ui.tab==='archived'){if(!isEnded(p))return false}
+    else{
+      if(!isActive(p))return false;
+      if(ui.tab==='open'&&p.status!=='open')return false;
+      if(ui.tab==='sealed'&&p.status!=='sealed')return false;
+      if(ui.tab==='due'&&c!=='s-soon'&&c!=='s-bad')return false;
+    }
+    if(ui.cat&&p.cat!==ui.cat)return false;
+    if(q&&(p.name+' '+(p.brand||'')+' '+(p.cat||'')).toLowerCase().indexOf(q)<0)return false;
+    return true;
+  });
+  if(ui.tab==='archived')shown.sort(function(a,b){return (b.ended||'').localeCompare(a.ended||'')});
+  else shown.sort(function(a,b){return sortKey(a)-sortKey(b)});
+  $('shownCount').textContent=shown.length+' 件';
+
+  var emptyMsg;
+  if(!items.length)emptyMsg='护肤品柜还是空的。<br>点“添加”，记下第一瓶和它的开封日期。';
+  else if(ui.q||ui.cat)emptyMsg='没有符合条件的产品，换个关键词或类别试试。';
+  else emptyMsg={all:'柜子里现在没有产品。',open:'没有正在使用的产品。',sealed:'没有未开封的库存。买了还没拆的可以先记在这里。',due:'没有临期或超期的产品。',archived:'用完或丢掉的会收到这里。'}[ui.tab];
+  $('grid').innerHTML=shown.length?shown.map(card).join(''):'<li class="empty">'+emptyMsg+'</li>';
+
+  var due=nSoon+nBad;
+  [].forEach.call(document.querySelectorAll('[data-badge]'),function(b){b.hidden=!due});
+}
+
+/* ---------- 期限提醒 ---------- */
+function rrow(p){
+  var s=stateOf(p),lp=leftParts(s.days);
+  var sub=s.e?fmt(s.e.d)+' 到期，'+(p.status==='sealed'?'未开封，':'')+s.e.why:'还没填“开封后可用几个月”';
+  var num=s.e?'<b class="num">'+lp.num+'</b>'+(lp.label==='超期'?'天前':lp.unit):'待补充';
+  return '<li class="'+s.cls+'"><button class="rrow" type="button" data-id="'+p.id+'">'+
+    '<span class="thumb">'+pic(p)+'</span>'+
+    '<span style="min-width:0"><span class="rname">'+esc(p.name)+'</span><span class="rsub num">'+esc(sub)+'</span></span>'+
+    '<span class="rnum">'+num+'</span></button></li>';
+}
+function renderRemind(){
+  var act=db.items.filter(isActive).sort(function(a,b){return sortKey(a)-sortKey(b)});
+  var g={bad:[],soon:[],ok:[],none:[]};
+  act.forEach(function(p){
+    var c=stateOf(p).cls;
+    if(c==='s-none'){if(p.status==='open')g.none.push(p)}
+    else g[c.slice(2)].push(p);
+  });
+  function block(title,dot,list){
+    return list.length?'<div class="block"><h2><span class="dot '+dot+'"></span>'+title+'<span class="count num">'+list.length+' 件</span></h2><ul class="rows">'+list.map(rrow).join('')+'</ul></div>':'';
+  }
+  var h=block('已经超期','bad',g.bad)+block(db.settings.warn+' 天内到期','soon',g.soon)+block('之后到期','',g.ok)+block('缺少到期信息','none',g.none);
+  $('remindBody').innerHTML=h||'<div class="block"><div class="empty">还没有需要留意的产品。<br>添加产品并填上开封日期后，这里会按到期先后排好。</div></div>';
+}
+
+/* ---------- 使用记录 ---------- */
+function renderLog(){
+  var ended=db.items.filter(isEnded),act=db.items.filter(isActive);
+  var nd=ended.filter(function(p){return p.status==='done'}).length,nt=ended.length-nd;
+  var rate=ended.length?Math.round(nd/ended.length*100)+'%':'—';
+  $('logStats').innerHTML=
+    '<div class="stat"><span class="lab">用完</span><b class="num">'+two(nd)+'</b><span class="cap">件用到了最后</span></div>'+
+    '<div class="stat mid"><span class="lab">用完率</span><b class="num">'+rate+'</b><span class="cap">'+(ended.length?'在已归档的 '+ended.length+' 件里':'归档后开始统计')+'</span></div>'+
+    '<div class="stat"><span class="lab">丢弃</span><b class="num">'+two(nt)+'</b><span class="cap">件没用完</span></div>';
+
+  var cnt={},max=0;
+  act.forEach(function(p){var c=p.cat||'其他';cnt[c]=(cnt[c]||0)+1;if(cnt[c]>max)max=cnt[c]});
+  var keys=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a]});
+  $('catBlock').hidden=!keys.length;
+  $('cats').innerHTML=keys.map(function(k){
+    return '<div class="cat"><span>'+esc(k)+'</span><span class="track"><span style="width:'+Math.round(cnt[k]/act.length*100)+'%"></span></span><em class="num">'+cnt[k]+'</em></div>';
+  }).join('');
+
+  var ev=[];
+  db.items.forEach(function(p){
+    if(p.created&&p.created!==p.opened)ev.push({d:p.created,t:'加入护肤品柜',p:p});
+    if(p.opened)ev.push({d:p.opened,t:'开封',p:p});
+    if(p.ended&&isEnded(p))ev.push({d:p.ended,t:p.status==='done'?'用完了':'没用完，丢掉了',p:p});
+  });
+  ev.sort(function(a,b){return b.d.localeCompare(a.d)});
+  $('timeline').innerHTML=ev.length?ev.slice(0,60).map(function(e){
+    return '<li><time class="num">'+e.d+'</time><span>'+esc(e.p.name)+' <i>'+e.t+'</i></span></li>';
+  }).join(''):'<li><time></time><span><i>还没有动态。</i></span></li>';
+}
+
+function render(){
+  renderHome();renderRemind();renderLog();
+  $('setWarn').value=db.settings.warn;
+  document.documentElement.dataset.fs=db.settings.fs;
+  [].forEach.call($('setSize').children,function(b){b.classList.toggle('on',b.dataset.fs===db.settings.fs)});
+}
+function show(view){
+  ui.view=view;
+  ['home','remind','log','settings'].forEach(function(v){$('v-'+v).classList.toggle('on',v===view)});
+  [].forEach.call(document.querySelectorAll('[data-view]'),function(b){
+    if(b.dataset.view===view)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+  });
+  window.scrollTo(0,0);
+}
+
+/* ---------- 表单 ---------- */
+var paoVal=0,formPhoto='';
+$('f-cat').innerHTML=CATS.map(function(c){return '<option>'+c+'</option>'}).join('');
+$('catFilter').innerHTML='<option value="">全部类别</option>'+CATS.map(function(c){return '<option>'+c+'</option>'}).join('');
+function drawPao(){
+  var list=PAOS.slice();
+  if(paoVal&&list.indexOf(paoVal)<0)list.push(paoVal);
+  $('paoChips').innerHTML=list.map(function(m){
+    return '<button type="button" data-m="'+m+'" class="'+(m===paoVal?'on':'')+'" aria-pressed="'+(m===paoVal)+'">'+m+'</button>';
+  }).join('')+'<button type="button" data-m="other">其他</button>';
+}
+function drawPhoto(){
+  $('photoBox').innerHTML=formPhoto?'<img src="'+formPhoto+'" alt="产品照片">':IC.cam;
+  $('photoPick').textContent=formPhoto?'换一张照片':'拍照或选一张照片';
+  $('photoDrop').hidden=!formPhoto;
+}
+function formStatus(){return document.querySelector('input[name=st]:checked').value}
+function syncForm(){
+  var st=formStatus();
+  $('openedWrap').hidden=(st!=='open');
+  var e=expiryOf({status:st,opened:$('f-opened').value,pao:paoVal,bestBefore:$('f-best').value}),pv=$('preview');
+  if(e){pv.hidden=false;pv.textContent=fmt(e.d)+' 到期，'+leftText(diffDays(e.d,today()))}
+  else pv.hidden=true;
+}
+function openForm(p){
+  ui.editing=p?p.id:null;
+  var isNew=!p;
+  p=p||{name:'',brand:'',cat:'精华',status:ui.tab==='sealed'?'sealed':'open',opened:fmt(today()),pao:12,bestBefore:'',note:''};
+  var ended=isEnded(p);
+  $('dlgTitle').textContent=isNew?'添加产品':'产品详情';
+  $('f-name').value=p.name;$('f-brand').value=p.brand||'';
+  $('f-cat').value=CATS.indexOf(p.cat)>=0?p.cat:(p.cat==='乳液 / 面霜'?'乳液面霜':'其他');
+  document.querySelector('input[name=st][value='+(p.status==='sealed'?'sealed':'open')+']').checked=true;
+  $('f-opened').value=p.opened||fmt(today());
+  $('f-opened').max=fmt(today());
+  paoVal=+p.pao||0;drawPao();
+  formPhoto=(!isNew&&photos[p.id])||'';drawPhoto();
+  $('f-best').value=p.bestBefore||'';$('f-note').value=p.note||'';
+  $('existingActions').hidden=isNew;
+  $('actOpenNow').hidden=p.status!=='sealed';
+  $('actDone').hidden=ended;$('actTossed').hidden=ended;
+  $('actRestore').hidden=!ended;
+  $('actIcs').hidden=ended||!expiryOf(p);
+  syncForm();
+  dlg.showModal();dlg.scrollTop=0;
+}
+$('form').addEventListener('input',syncForm);
+$('form').addEventListener('change',syncForm);
+$('paoChips').addEventListener('click',function(ev){
+  var b=ev.target.closest('button');if(!b)return;
+  if(b.dataset.m==='other'){
+    var v=prompt('开封后可用几个月？填数字',paoVal||'');
+    if(v===null)return;
+    v=Math.round(+v);
+    if(!(v>=1&&v<=120)){toast('请填 1 到 120 之间的数字');return}
+    paoVal=v;
+  }else{var m=+b.dataset.m;paoVal=(paoVal===m?0:m)}
+  drawPao();syncForm();
+});
+$('photoPick').addEventListener('click',function(){$('photoFile').click()});
+$('photoDrop').addEventListener('click',function(){formPhoto='';drawPhoto()});
+$('photoFile').addEventListener('change',function(){
+  var f=this.files[0];this.value='';if(!f)return;
+  shrink(f).then(function(d){formPhoto=d;drawPhoto()})
+    .catch(function(){toast('这张图片读不出来，换一张试试')});
+});
+$('dlgClose').addEventListener('click',function(){dlg.close()});
+$('form').addEventListener('submit',function(ev){
+  ev.preventDefault();
+  var name=$('f-name').value.trim();
+  if(!name){toast('请先填产品名称');$('f-name').focus();return}
+  var st=formStatus();
+  if(st==='open'&&!$('f-opened').value){toast('请选开封日期');$('f-opened').focus();return}
+  var p=ui.editing?find(ui.editing):null,isNew=!p;
+  if(isNew){p={id:uid(),created:fmt(today())};db.items.push(p)}
+  p.name=name;p.brand=$('f-brand').value.trim();p.cat=$('f-cat').value;
+  if(!isEnded(p))p.status=st;
+  if(st==='open')p.opened=$('f-opened').value;else if(p.status==='sealed')p.opened='';
+  p.pao=paoVal;p.bestBefore=$('f-best').value;p.note=$('f-note').value.trim();
+  if((photos[p.id]||'')!==formPhoto)photoSet(p.id,formPhoto);
+  save();
+  if(isNew){ui.tab='all';ui.q='';ui.cat='';$('q').value='';$('catFilter').value='';show('home')}
+  render();dlg.close();toast('已保存');
+});
+function openNow(p){
+  p.status='open';p.opened=fmt(today());save();render();
+  if(!p.pao){openForm(p);toast('选一下开封后可用几个月，才能算到期日')}
+  else toast('已记为今天开封');
+}
+$('existingActions').addEventListener('click',function(ev){
+  var b=ev.target.closest('button');if(!b)return;
+  var p=find(ui.editing);if(!p)return;
+  var act=b.dataset.act;
+  if(act==='delete'){
+    if(!confirm('删除“'+p.name+'”这条记录？删除后不能恢复。'))return;
+    db.items=db.items.filter(function(x){return x.id!==p.id});
+    photoSet(p.id,'');save();render();dlg.close();toast('已删除');return;
+  }
+  if(act==='ics'){exportIcs([p]);return}
+  dlg.close();
+  if(act==='openNow'){openNow(p);return}
+  if(act==='done'||act==='tossed'){p.status=act;p.ended=fmt(today());toast(act==='done'?'已归档：用完了':'已归档：丢掉了')}
+  if(act==='restore'){p.status=p.opened?'open':'sealed';p.ended='';toast('已放回护肤品柜')}
+  save();render();
+});
+
+/* ---------- 页面交互 ---------- */
+document.addEventListener('click',function(ev){
+  var t=ev.target,e;
+  if((e=t.closest('[data-id]'))){openForm(find(e.dataset.id));return}
+  if((e=t.closest('[data-open-now]'))){openNow(find(e.dataset.openNow));return}
+  if((e=t.closest('[data-tab]'))){ui.tab=e.dataset.tab;renderHome();return}
+  if((e=t.closest('[data-add]'))){openForm(null);return}
+  if((e=t.closest('[data-goto]'))){show(e.dataset.goto);return}
+  if((e=t.closest('[data-view]'))){show(e.dataset.view)}
+});
+$('q').addEventListener('input',function(){ui.q=this.value;renderHome()});
+$('catFilter').addEventListener('change',function(){ui.cat=this.value;renderHome()});
+
+/* ---------- 设置 ---------- */
+$('setWarn').addEventListener('change',function(){
+  db.settings.warn=Math.max(1,Math.min(365,Math.round(+this.value||30)));save();render();
+});
+$('setSize').addEventListener('click',function(ev){
+  var b=ev.target.closest('button');if(!b)return;
+  db.settings.fs=b.dataset.fs;save();render();
+});
+$('exportBtn').addEventListener('click',function(){
+  download('护肤手帐备份-'+fmt(today())+'.json',JSON.stringify({items:db.items,settings:db.settings,photos:photos}),'application/json');
+  toast('已导出备份文件');
+});
+$('importBtn').addEventListener('click',function(){$('importFile').click()});
+$('importFile').addEventListener('change',function(){
+  var file=this.files[0];this.value='';if(!file)return;
+  var r=new FileReader();
+  r.onload=function(){
+    var d,clean;
+    try{
+      d=JSON.parse(r.result);
+      if(!d||!Array.isArray(d.items))throw 0;
+      clean=d.items.filter(function(p){return p&&typeof p.name==='string'&&p.id});
+    }catch(e){toast('这个文件不是本工具导出的备份，无法恢复');return}
+    if(!confirm('备份里有 '+clean.length+' 条记录。恢复会替换现在的 '+db.items.length+' 条，继续吗？'))return;
+    db={items:clean,settings:fixSettings(d.settings)};
+    var ph={};
+    if(d.photos&&typeof d.photos==='object')Object.keys(d.photos).forEach(function(k){
+      if(typeof d.photos[k]==='string'&&d.photos[k].indexOf('data:image/')===0)ph[k]=d.photos[k];
+    });
+    photos=ph;save();render();
+    photoTx(function(s){s.clear();Object.keys(ph).forEach(function(k){s.put(ph[k],k)})})
+      .then(function(){toast('已从备份恢复')})
+      .catch(function(){toast('记录已恢复，但照片没能保存到这台设备')});
+  };
+  r.onerror=function(){toast('读取文件失败，请再试一次')};
+  r.readAsText(file);
+});
+
+/* ---------- 日历文件 (.ics) ---------- */
+function icsEsc(s){return String(s).replace(/\\/g,'\\\\').replace(/([,;])/g,'\\$1').replace(/\n/g,'\\n')}
+function ymd(d){return ''+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())}
+function exportIcs(list){
+  var now=new Date();
+  var stamp=now.getUTCFullYear()+pad(now.getUTCMonth()+1)+pad(now.getUTCDate())+'T'+pad(now.getUTCHours())+pad(now.getUTCMinutes())+pad(now.getUTCSeconds())+'Z';
+  var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//skincare-notes//ZH','CALSCALE:GREGORIAN'],n=0;
+  list.forEach(function(p){
+    var e=expiryOf(p);if(!e||diffDays(e.d,today())<0)return;
+    var next=new Date(e.d.getFullYear(),e.d.getMonth(),e.d.getDate()+1);
+    L.push('BEGIN:VEVENT','UID:'+p.id+'@skincare-notes','DTSTAMP:'+stamp,
+      'DTSTART;VALUE=DATE:'+ymd(e.d),'DTEND;VALUE=DATE:'+ymd(next),
+      'SUMMARY:'+icsEsc('护肤品到期：'+p.name+(p.brand?'（'+p.brand+'）':'')),
+      'DESCRIPTION:'+icsEsc(e.why+(p.note?'。'+p.note:'')),
+      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(p.name+' 还有 '+db.settings.warn+' 天到期'),'TRIGGER:-P'+db.settings.warn+'D','END:VALARM',
+      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(p.name+' 今天到期'),'TRIGGER:PT9H','END:VALARM',
+      'END:VEVENT');
+    n++;
+  });
+  L.push('END:VCALENDAR');
+  if(!n){toast('没有可导出的到期日（需要未超期且填了到期信息）');return}
+  download('护肤品到期提醒.ics',L.join('\r\n'),'text/calendar');
+  toast('已导出 '+n+' 个到期日，打开文件加入日历');
+}
+$('icsAll').addEventListener('click',function(){exportIcs(db.items.filter(isActive))});
+
+/* ---------- 启动 ---------- */
+render();show('home');
+photoLoadAll().then(function(all){photos=all;render()}).catch(function(){});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)render()});
+if('serviceWorker' in navigator&&location.protocol==='https:'){
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+})();
+</script>
+</body>
+</html>
