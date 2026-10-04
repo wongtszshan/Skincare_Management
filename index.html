@@ -888,9 +888,11 @@ $('form').addEventListener('submit',function(ev){
   if(st==='open')p.opened=$('f-opened').value;else if(p.status==='sealed')p.opened='';
   p.pao=paoVal;p.bestBefore=$('f-best').value;p.note=$('f-note').value.trim();
   if((photos[p.id]||'')!==formPhoto){
-    p.photo=formPhoto?Date.now():0;
+    var oldPhoto=p.photo||0,newPhoto=formPhoto?newPhotoVersion():0;
+    p.photo=newPhoto;
     photoSet(p.id,formPhoto);
-    meta.pending[p.id]=formPhoto?'put':'del';meta.ver[p.id]=p.photo;saveMeta();
+    meta.pending[p.id]=formPhoto?{op:'put',ver:newPhoto}:{op:'del',ver:oldPhoto};
+    meta.ver[p.id]=newPhoto;saveMeta();
   }
   p.updated=Date.now();
   save();
@@ -910,7 +912,7 @@ $('existingActions').addEventListener('click',function(ev){
     if(!confirm('删除“'+p.name+'”这条记录？删除后不能恢复。'))return;
     db.items=db.items.filter(function(x){return x.id!==p.id});
     db.deleted[p.id]=Date.now();
-    if(photos[p.id]||p.photo){meta.pending[p.id]='del';saveMeta()}
+    if(photos[p.id]||p.photo){meta.pending[p.id]={op:'del',ver:p.photo||meta.ver[p.id]||0};saveMeta()}
     photoSet(p.id,'');save();render();dlg.close();toast('已删除');return;
   }
   if(act==='ics'){exportIcs([p]);return}
@@ -965,10 +967,10 @@ $('importFile').addEventListener('change',function(){
     });
     clean.forEach(function(p){
       keep[p.id]=1;delete del[p.id];p.updated=now;
-      if(ph[p.id]){p.photo=now;meta.pending[p.id]='put';meta.ver[p.id]=now}
-      else{if(p.photo||photos[p.id])meta.pending[p.id]='del';p.photo=0}
+      if(ph[p.id]){p.photo=newPhotoVersion();meta.pending[p.id]={op:'put',ver:p.photo};meta.ver[p.id]=p.photo}
+      else{if(p.photo||photos[p.id])meta.pending[p.id]={op:'del',ver:p.photo||meta.ver[p.id]||0};p.photo=0}
     });
-    db.items.forEach(function(p){if(!keep[p.id]){del[p.id]=now;if(p.photo||photos[p.id])meta.pending[p.id]='del'}});
+    db.items.forEach(function(p){if(!keep[p.id]){del[p.id]=now;if(p.photo||photos[p.id])meta.pending[p.id]={op:'del',ver:p.photo||meta.ver[p.id]||0}}});
     saveMeta();
     db={items:clean,settings:fixSettings(d.settings),deleted:del};
     photos=ph;save();render();
@@ -1014,6 +1016,14 @@ if(gh&&!(gh.owner&&gh.repo&&gh.token))gh=null;
 var meta=readJson(METAKEY,{});
 meta.pending=meta.pending||{};meta.ver=meta.ver||{};
 function saveMeta(){try{localStorage.setItem(METAKEY,JSON.stringify(meta))}catch(e){}}
+function newPhotoVersion(){return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)}
+function photoPath(id,ver){return 'photos/'+id+'-'+String(ver)+'.jpg'}
+function pendingPhoto(id){
+  var p=meta.pending[id];
+  if(!p)return null;
+  if(typeof p==='string')return {op:p,ver:meta.ver[id]||((find(id)||{}).photo)||0};
+  return p;
+}
 var sync={busy:false,again:false,timer:0,state:gh?'idle':'off',msg:''};
 
 function b64enc(str){
@@ -1090,7 +1100,10 @@ function queueSync(){
 function adoptPhotos(){
   var changed=false,now=Date.now();
   db.items.forEach(function(p){
-    if(photos[p.id]&&!p.photo&&!meta.pending[p.id]){p.photo=now;p.updated=now;meta.pending[p.id]='put';meta.ver[p.id]=now;changed=true}
+    if(photos[p.id]&&!p.photo&&!meta.pending[p.id]){
+      p.photo=newPhotoVersion();p.updated=now;
+      meta.pending[p.id]={op:'put',ver:p.photo};meta.ver[p.id]=p.photo;changed=true;
+    }
   });
   if(changed){saveMeta();save(true)}
 }
@@ -1098,13 +1111,24 @@ function pushPhotos(){
   var ids=Object.keys(meta.pending),chain=Promise.resolve();
   ids.forEach(function(id){
     chain=chain.then(function(){
-      var op=meta.pending[id],path='photos/'+id+'.jpg',data=photos[id];
-      if(op==='put'&&!data){delete meta.pending[id];saveMeta();return}
+      var pend=pendingPhoto(id),data=photos[id];
+      if(!pend){return}
+      var op=pend.op,ver=pend.ver,path=ver?photoPath(id,ver):'photos/'+id+'.jpg';
+      if(op==='put'&&(!data||!ver)){delete meta.pending[id];saveMeta();return}
       return api('GET',path).then(function(r){
         var sha=r.status===404?undefined:r.body.sha;
-        if(op==='put')return api('PUT',path,{message:'照片：'+id,content:data.split(',')[1],sha:sha});
-        if(sha)return api('DELETE',path,{message:'移除照片：'+id,sha:sha});
-      }).then(function(){if(meta.pending[id]===op){delete meta.pending[id];saveMeta()}});
+        if(op==='put')return api('PUT',path,{message:'照片：'+id+' '+ver,content:data.split(',')[1],sha:sha});
+        if(sha)return api('DELETE',path,{message:'移除照片：'+id+' '+ver,sha:sha});
+        if(op==='del'&&ver){
+          var legacy='photos/'+id+'.jpg';
+          return api('GET',legacy).then(function(lr){
+            if(lr.status!==404&&lr.body.sha)return api('DELETE',legacy,{message:'移除旧版照片：'+id,sha:lr.body.sha});
+          });
+        }
+      }).then(function(){
+        var cur=pendingPhoto(id);
+        if(cur&&cur.op===op&&String(cur.ver||'')===String(ver||'')){delete meta.pending[id];saveMeta()}
+      });
     });
   });
   return chain;
@@ -1141,7 +1165,11 @@ function pullPhotos(){
     alive[p.id]=p;
     if(!p.photo||meta.ver[p.id]===p.photo||meta.pending[p.id])return;
     chain=chain.then(function(){
-      return api('GET','photos/'+p.id+'.jpg').then(function(r){
+      var versioned=photoPath(p.id,p.photo),legacy='photos/'+p.id+'.jpg';
+      return api('GET',versioned).then(function(r){
+        if(r.status!==404&&r.body.content)return r;
+        return api('GET',legacy);
+      }).then(function(r){
         if(r.status===404||!r.body.content)return;
         meta.ver[p.id]=p.photo;saveMeta();
         return photoSet(p.id,'data:image/jpeg;base64,'+r.body.content.replace(/\s/g,''));
