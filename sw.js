@@ -1,5 +1,5 @@
 // 离线缓存。改了 index.html 之后，把下面的 v1 改成 v2，手机上就会拿到新版本。
-const CACHE = 'skincare-v3';
+const CACHE = 'skincare-v4';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

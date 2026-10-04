@@ -320,16 +320,16 @@ fieldset.f legend+*{clear:both}
     <button type="button" data-view="home" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.500" height="6.500" rx="1.500"/><rect x="13.500" y="4" width="6.500" height="6.500" rx="1.500"/><rect x="4" y="13.500" width="6.500" height="6.500" rx="1.500"/><rect x="13.500" y="13.500" width="6.500" height="6.500" rx="1.500"/></svg>我的护肤品</button>
     <button type="button" data-view="remind"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.500 16.500V11a5.500 5.500 0 0 1 11 0v5.500l1.500 2h-14z"/><path d="M10 20.500h4"/></svg>期限提醒<span class="badge" data-badge hidden></span></button>
     <button type="button" data-view="log"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19v-5M12 19V5M18 19v-9"/></svg>使用记录</button>
-    <button type="button" data-view="settings"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.500h9M17 7.500h3M4 16.500h3M11 16.500h9"/><circle cx="15" cy="7.500" r="2"/><circle cx="9" cy="16.500" r="2"/></svg>设置与备份</button>
+    <button type="button" data-view="settings"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.500h9M17 7.500h3M4 16.500h3M11 16.500h9"/><circle cx="15" cy="7.500" r="2"/><circle cx="9" cy="16.500" r="2"/></svg>设置与同步</button>
   </nav>
-  <div class="foot"><b>记录只存在这台设备</b>换设备前，先到“设置与备份”导出。</div>
+  <div class="foot"><b data-sync-title>记录只存在这台设备</b><span data-sync-sub>到“设置与同步”连接 GitHub 私有库。</span></div>
 </aside>
 
 <main>
   <div class="topbar">
     <div class="brand"><span class="mark" aria-hidden="true">肤</span><span><b>护肤手帐</b><small>SKINCARE NOTES</small></span></div>
     <span class="tagline">记下开封那天，把每一瓶好好用完。</span>
-    <button class="ghost" type="button" data-goto="settings"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10.500l4 4 4-4M5 19.500h14"/></svg>备份</button>
+    <button class="ghost" type="button" id="syncBtn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8.500A7.500 7.500 0 0 0 5.600 7M5 15.500A7.500 7.500 0 0 0 18.400 17"/><path d="M5 3.500V7.500h4M19 20.500v-4h-4"/></svg><span id="syncLabel">同步</span></button>
   </div>
 
   <section class="view on" id="v-home" aria-labelledby="h-home">
@@ -378,7 +378,7 @@ fieldset.f legend+*{clear:both}
 
   <section class="view narrow" id="v-settings" aria-labelledby="h-settings">
     <p class="eyebrow">SETTINGS</p>
-    <h1 id="h-settings">设置与备份</h1>
+    <h1 id="h-settings">设置与同步</h1>
     <div class="panel">
       <div class="inline">
         <div><h2>临期提醒</h2><p>到期前多少天开始算“临期”</p></div>
@@ -393,9 +393,31 @@ fieldset.f legend+*{clear:both}
         <button type="button" data-fs="huge">特大</button>
       </div>
     </div>
+    <div class="panel" id="ghPanel">
+      <h2>GitHub 同步</h2>
+      <p id="ghIntro">连接你的私有仓库后，每次添加或修改都会自动提交到仓库里的 data.json，照片存到 photos 文件夹。换设备时填同样的三项即可取回。</p>
+      <p id="ghStatus" role="status"></p>
+      <div id="ghForm" class="acts">
+        <label class="f">GitHub 用户名
+          <input class="field" id="gh-owner" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="例如：sharon123">
+        </label>
+        <label class="f">私有仓库名
+          <input class="field" id="gh-repo" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="例如：skincare-data">
+        </label>
+        <label class="f">访问令牌
+          <input class="field" id="gh-token" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="github_pat_ 开头的那一串">
+        </label>
+        <p class="hint">令牌只保存在这台设备的浏览器里，不会写进仓库，也不会出现在备份文件里。</p>
+        <button class="btn primary" id="ghConnect" type="button">连接并同步</button>
+      </div>
+      <div id="ghOn" class="acts" hidden>
+        <button class="btn primary" id="ghNow" type="button">立即同步</button>
+        <button class="btn danger" id="ghOff" type="button">断开连接</button>
+      </div>
+    </div>
     <div class="panel">
-      <h2>备份与换设备</h2>
-      <p>记录和照片只存在这台设备的这个浏览器里，不会自动同步到别的设备。想在另一台设备上用，或者担心丢失：在这里导出备份文件，到另一台设备上恢复。</p>
+      <h2>备份文件</h2>
+      <p>不依赖 GitHub 的另一份保险：把全部记录和照片导出成一个文件，自己保存。</p>
       <button class="btn" id="exportBtn" type="button">导出备份文件（含照片）</button>
       <button class="btn" id="importBtn" type="button">从备份文件恢复</button>
       <input id="importFile" type="file" accept="application/json,.json" hidden>
@@ -513,13 +535,14 @@ function fixSettings(s){
 function load(){
   try{
     var d=JSON.parse(localStorage.getItem(KEY));
-    if(d&&Array.isArray(d.items)){d.settings=fixSettings(d.settings);return d}
+    if(d&&Array.isArray(d.items)){d.settings=fixSettings(d.settings);if(!d.deleted||typeof d.deleted!=='object')d.deleted={};return d}
   }catch(e){}
-  return {items:[],settings:fixSettings()};
+  return {items:[],settings:fixSettings(),deleted:{}};
 }
-function save(){
+function save(localOnly){
   try{localStorage.setItem(KEY,JSON.stringify(db))}
   catch(e){toast('保存失败：浏览器不允许存储，请检查是否处于无痕模式')}
+  if(!localOnly)queueSync();
 }
 var db=load();
 var ui={view:'home',tab:'all',cat:'',q:'',editing:null};
@@ -864,13 +887,18 @@ $('form').addEventListener('submit',function(ev){
   if(!isEnded(p))p.status=st;
   if(st==='open')p.opened=$('f-opened').value;else if(p.status==='sealed')p.opened='';
   p.pao=paoVal;p.bestBefore=$('f-best').value;p.note=$('f-note').value.trim();
-  if((photos[p.id]||'')!==formPhoto)photoSet(p.id,formPhoto);
+  if((photos[p.id]||'')!==formPhoto){
+    p.photo=formPhoto?Date.now():0;
+    photoSet(p.id,formPhoto);
+    meta.pending[p.id]=formPhoto?'put':'del';meta.ver[p.id]=p.photo;saveMeta();
+  }
+  p.updated=Date.now();
   save();
   if(isNew){ui.tab='all';ui.q='';ui.cat='';$('q').value='';$('catFilter').value='';show('home')}
   render();dlg.close();toast('已保存');
 });
 function openNow(p){
-  p.status='open';p.opened=fmt(today());save();render();
+  p.status='open';p.opened=fmt(today());p.updated=Date.now();save();render();
   if(!p.pao){openForm(p);toast('选一下开封后可用几个月，才能算到期日')}
   else toast('已记为今天开封');
 }
@@ -881,6 +909,8 @@ $('existingActions').addEventListener('click',function(ev){
   if(act==='delete'){
     if(!confirm('删除“'+p.name+'”这条记录？删除后不能恢复。'))return;
     db.items=db.items.filter(function(x){return x.id!==p.id});
+    db.deleted[p.id]=Date.now();
+    if(photos[p.id]||p.photo){meta.pending[p.id]='del';saveMeta()}
     photoSet(p.id,'');save();render();dlg.close();toast('已删除');return;
   }
   if(act==='ics'){exportIcs([p]);return}
@@ -888,6 +918,7 @@ $('existingActions').addEventListener('click',function(ev){
   if(act==='openNow'){openNow(p);return}
   if(act==='done'||act==='tossed'){p.status=act;p.ended=fmt(today());toast(act==='done'?'已归档：用完了':'已归档：丢掉了')}
   if(act==='restore'){p.status=p.opened?'open':'sealed';p.ended='';toast('已放回护肤品柜')}
+  p.updated=Date.now();
   save();render();
 });
 
@@ -906,11 +937,11 @@ $('catFilter').addEventListener('change',function(){ui.cat=this.value;renderHome
 
 /* ---------- 设置 ---------- */
 $('setWarn').addEventListener('change',function(){
-  db.settings.warn=Math.max(1,Math.min(365,Math.round(+this.value||30)));save();render();
+  db.settings.warn=Math.max(1,Math.min(365,Math.round(+this.value||30)));save(true);render();
 });
 $('setSize').addEventListener('click',function(ev){
   var b=ev.target.closest('button');if(!b)return;
-  db.settings.fs=b.dataset.fs;save();render();
+  db.settings.fs=b.dataset.fs;save(true);render();
 });
 $('exportBtn').addEventListener('click',function(){
   download('护肤手帐备份-'+fmt(today())+'.json',JSON.stringify({items:db.items,settings:db.settings,photos:photos}),'application/json');
@@ -928,11 +959,18 @@ $('importFile').addEventListener('change',function(){
       clean=d.items.filter(function(p){return p&&typeof p.name==='string'&&p.id});
     }catch(e){toast('这个文件不是本工具导出的备份，无法恢复');return}
     if(!confirm('备份里有 '+clean.length+' 条记录。恢复会替换现在的 '+db.items.length+' 条，继续吗？'))return;
-    db={items:clean,settings:fixSettings(d.settings)};
-    var ph={};
+    var ph={},now=Date.now(),del=db.deleted||{},keep={};
     if(d.photos&&typeof d.photos==='object')Object.keys(d.photos).forEach(function(k){
       if(typeof d.photos[k]==='string'&&d.photos[k].indexOf('data:image/')===0)ph[k]=d.photos[k];
     });
+    clean.forEach(function(p){
+      keep[p.id]=1;delete del[p.id];p.updated=now;
+      if(ph[p.id]){p.photo=now;meta.pending[p.id]='put';meta.ver[p.id]=now}
+      else{if(p.photo||photos[p.id])meta.pending[p.id]='del';p.photo=0}
+    });
+    db.items.forEach(function(p){if(!keep[p.id]){del[p.id]=now;if(p.photo||photos[p.id])meta.pending[p.id]='del'}});
+    saveMeta();
+    db={items:clean,settings:fixSettings(d.settings),deleted:del};
     photos=ph;save();render();
     photoTx(function(s){s.clear();Object.keys(ph).forEach(function(k){s.put(ph[k],k)})})
       .then(function(){toast('已从备份恢复')})
@@ -968,10 +1006,209 @@ function exportIcs(list){
 }
 $('icsAll').addEventListener('click',function(){exportIcs(db.items.filter(isActive))});
 
+/* ---------- GitHub 私有库同步 ---------- */
+var GHKEY='skincare.gh',METAKEY='skincare.sync';
+function readJson(k,def){try{var v=JSON.parse(localStorage.getItem(k));return v&&typeof v==='object'?v:def}catch(e){return def}}
+var gh=readJson(GHKEY,null);
+if(gh&&!(gh.owner&&gh.repo&&gh.token))gh=null;
+var meta=readJson(METAKEY,{});
+meta.pending=meta.pending||{};meta.ver=meta.ver||{};
+function saveMeta(){try{localStorage.setItem(METAKEY,JSON.stringify(meta))}catch(e){}}
+var sync={busy:false,again:false,timer:0,state:gh?'idle':'off',msg:''};
+
+function b64enc(str){
+  var b=new TextEncoder().encode(str),s='';
+  for(var i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));
+  return btoa(s);
+}
+function b64dec(b64){
+  var s=atob(b64.replace(/\s/g,'')),b=new Uint8Array(s.length);
+  for(var i=0;i<s.length;i++)b[i]=s.charCodeAt(i);
+  return new TextDecoder().decode(b);
+}
+function api(method,path,body,raw){
+  var url='https://api.github.com/repos/'+encodeURIComponent(gh.owner)+'/'+encodeURIComponent(gh.repo)+(path?'/contents/'+path:'');
+  var opt={method:method,cache:'no-store',headers:{'Authorization':'Bearer '+gh.token,'Accept':raw?'application/vnd.github.raw+json':'application/vnd.github+json'}};
+  if(body){opt.body=JSON.stringify(body);opt.headers['Content-Type']='application/json'}
+  return fetch(url,opt).then(function(r){
+    if(method==='GET'&&path&&(r.status===404||r.status===409))return {status:404};
+    if(!r.ok){var e=new Error('github '+r.status);e.status=r.status;throw e}
+    return (raw?r.text():r.json()).then(function(j){return {status:r.status,body:j}});
+  });
+}
+function errMsg(e){
+  var s=e&&e.status;
+  if(s===401)return '令牌无效或已过期，请重新生成一个再填一次。';
+  if(s===403)return '令牌权限不够：需要对这个仓库有 Contents 的读写权限。也可能是请求太频繁，稍后再试。';
+  if(s===404)return '找不到这个仓库：检查用户名和仓库名，以及令牌是否授权了这个仓库。';
+  if(s===409||s===422)return '另一台设备刚好也在保存，再同步一次即可。';
+  if(s)return '同步出错（代码 '+s+'），稍后再试。';
+  if(e&&e.bad)return '仓库里的 data.json 读不出来，可能被手动改坏了。';
+  return '连不上 GitHub，检查一下网络。';
+}
+function canon(d){
+  var items=(d.items||[]).slice().sort(function(a,b){return a.id<b.id?-1:a.id>b.id?1:0});
+  var del={};Object.keys(d.deleted||{}).sort().forEach(function(k){del[k]=d.deleted[k]});
+  return JSON.stringify({items:items,deleted:del});
+}
+/* 合并规则：同一条记录取修改时间较新的；删除记录带时间戳，比它旧的修改不会让它复活 */
+function mergeData(local,remote){
+  var del={},map={},items=[],k;
+  [remote.deleted||{},local.deleted||{}].forEach(function(d){for(var id in d)if(!(del[id]>=d[id]))del[id]=d[id]});
+  (remote.items||[]).forEach(function(p){if(p&&p.id&&typeof p.name==='string')map[p.id]=p});
+  (local.items||[]).forEach(function(p){var r=map[p.id];if(!r||(p.updated||0)>(r.updated||0))map[p.id]=p});
+  for(k in map){if(del[k]&&del[k]>=(map[k].updated||0))continue;items.push(map[k])}
+  items.sort(function(a,b){return (a.created||'').localeCompare(b.created||'')||(a.id<b.id?-1:1)});
+  return {items:items,deleted:del};
+}
+function setSync(state,msg){
+  sync.state=state;sync.msg=msg||'';
+  var label={off:'同步',idle:'同步',pending:'待同步',busy:'同步中',ok:'已同步',offline:'离线',err:'同步失败'}[state];
+  $('syncLabel').textContent=label;
+  var on=!!gh,last=meta.last?new Date(meta.last):null;
+  var when=last?fmt(last)+' '+pad(last.getHours())+':'+pad(last.getMinutes()):'';
+  var line;
+  if(!on)line='';
+  else if(state==='busy')line='正在同步…';
+  else if(state==='err')line='同步失败：'+sync.msg;
+  else if(state==='offline')line='现在没有网络，记录先存在这台设备，联网后自动提交。';
+  else if(state==='pending')line='有改动等待提交…';
+  else line='已连接 '+gh.owner+'/'+gh.repo+(when?'，上次同步 '+when:'');
+  $('ghStatus').textContent=line;$('ghStatus').hidden=!line;
+  $('ghStatus').style.color=state==='err'?'var(--bad)':'';
+  $('ghForm').hidden=on;$('ghOn').hidden=!on;$('ghIntro').hidden=on;
+  [].forEach.call(document.querySelectorAll('[data-sync-title]'),function(e){e.textContent=on?'已连接 GitHub 私有库':'记录只存在这台设备'});
+  [].forEach.call(document.querySelectorAll('[data-sync-sub]'),function(e){e.textContent=on?(state==='err'?'同步失败，点右上角“同步”重试。':(when?'上次同步 '+when:'等待第一次同步')):'到“设置与同步”连接 GitHub 私有库。'});
+}
+function queueSync(){
+  if(!gh)return;
+  clearTimeout(sync.timer);
+  if(!sync.busy)setSync('pending');
+  sync.timer=setTimeout(doSync,1200);
+}
+/* 连接前就存在的照片：补上版本号并排队上传 */
+function adoptPhotos(){
+  var changed=false,now=Date.now();
+  db.items.forEach(function(p){
+    if(photos[p.id]&&!p.photo&&!meta.pending[p.id]){p.photo=now;p.updated=now;meta.pending[p.id]='put';meta.ver[p.id]=now;changed=true}
+  });
+  if(changed){saveMeta();save(true)}
+}
+function pushPhotos(){
+  var ids=Object.keys(meta.pending),chain=Promise.resolve();
+  ids.forEach(function(id){
+    chain=chain.then(function(){
+      var op=meta.pending[id],path='photos/'+id+'.jpg',data=photos[id];
+      if(op==='put'&&!data){delete meta.pending[id];saveMeta();return}
+      return api('GET',path).then(function(r){
+        var sha=r.status===404?undefined:r.body.sha;
+        if(op==='put')return api('PUT',path,{message:'照片：'+id,content:data.split(',')[1],sha:sha});
+        if(sha)return api('DELETE',path,{message:'移除照片：'+id,sha:sha});
+      }).then(function(){if(meta.pending[id]===op){delete meta.pending[id];saveMeta()}});
+    });
+  });
+  return chain;
+}
+function readRemote(){
+  return api('GET','data.json').then(function(r){
+    if(r.status===404)return {data:{items:[],deleted:{}},sha:undefined};
+    var sha=r.body.sha;
+    var text=r.body.content?Promise.resolve(b64dec(r.body.content))
+      :api('GET','data.json',null,true).then(function(x){return x.status===404?'{}':x.body});
+    return text.then(function(t){
+      var d;
+      try{d=JSON.parse(t)}catch(e){var err=new Error('bad json');err.bad=true;throw err}
+      if(!d||typeof d!=='object')d={};
+      return {data:{items:Array.isArray(d.items)?d.items:[],deleted:(d.deleted&&typeof d.deleted==='object')?d.deleted:{}},sha:sha};
+    });
+  });
+}
+function pullMergePush(n){
+  return readRemote().then(function(rm){
+    var merged=mergeData(db,rm.data);
+    if(canon(merged)!==canon(db)){db.items=merged.items;db.deleted=merged.deleted;save(true)}
+    if(canon(merged)===canon(rm.data))return;
+    var body=JSON.stringify({version:1,saved:new Date().toISOString(),items:merged.items,deleted:merged.deleted},null,1);
+    return api('PUT','data.json',{message:'更新护肤品记录',content:b64enc(body),sha:rm.sha}).catch(function(e){
+      if((e.status===409||e.status===422)&&n<3)return pullMergePush(n+1);
+      throw e;
+    });
+  });
+}
+function pullPhotos(){
+  var chain=Promise.resolve(),alive={};
+  db.items.forEach(function(p){
+    alive[p.id]=p;
+    if(!p.photo||meta.ver[p.id]===p.photo||meta.pending[p.id])return;
+    chain=chain.then(function(){
+      return api('GET','photos/'+p.id+'.jpg').then(function(r){
+        if(r.status===404||!r.body.content)return;
+        meta.ver[p.id]=p.photo;saveMeta();
+        return photoSet(p.id,'data:image/jpeg;base64,'+r.body.content.replace(/\s/g,''));
+      });
+    });
+  });
+  Object.keys(photos).forEach(function(id){
+    if(meta.pending[id])return;
+    if(!alive[id]||!alive[id].photo){delete meta.ver[id];photoSet(id,'')}
+  });
+  return chain;
+}
+function doSync(){
+  clearTimeout(sync.timer);
+  if(!gh)return Promise.resolve(false);
+  if(sync.busy){sync.again=true;return Promise.resolve(false)}
+  if(navigator.onLine===false){setSync('offline');return Promise.resolve(false)}
+  sync.busy=true;setSync('busy');
+  adoptPhotos();
+  var ok=false;
+  return pushPhotos().then(function(){return pullMergePush(0)}).then(pullPhotos)
+    .then(function(){ok=true;meta.last=Date.now();saveMeta();setSync('ok');render()})
+    .catch(function(e){setSync('err',errMsg(e));render()})
+    .then(function(){
+      sync.busy=false;
+      if(sync.again){sync.again=false;return doSync()}
+      return ok;
+    });
+}
+$('syncBtn').addEventListener('click',function(){
+  if(!gh){show('settings');$('ghPanel').scrollIntoView({block:'start'});return}
+  doSync().then(function(ok){toast(ok?'已同步':(sync.state==='offline'?'现在没有网络':sync.msg||'同步失败'))});
+});
+$('ghNow').addEventListener('click',function(){
+  doSync().then(function(ok){toast(ok?'已同步':(sync.state==='offline'?'现在没有网络':sync.msg||'同步失败'))});
+});
+$('ghConnect').addEventListener('click',function(){
+  var owner=$('gh-owner').value.trim(),repo=$('gh-repo').value.trim(),token=$('gh-token').value.trim();
+  var m=repo.match(/(?:github\.com\/)?([^\/\s]+)\/([^\/\s]+?)(?:\.git)?\/?$/);
+  if(m){if(!owner)owner=m[1];repo=m[2]}
+  owner=owner.replace(/^@/,'');
+  if(!owner||!repo||!token){toast('用户名、仓库名、令牌三项都要填');return}
+  var btn=this;btn.disabled=true;btn.textContent='正在连接…';
+  gh={owner:owner,repo:repo,token:token};
+  api('GET','').then(function(){
+    try{localStorage.setItem(GHKEY,JSON.stringify(gh))}catch(e){}
+    $('gh-token').value='';
+    return doSync().then(function(ok){toast(ok?'已连接并完成同步':sync.msg||'已连接，但同步没有完成')});
+  }).catch(function(e){
+    gh=null;setSync('off');toast(errMsg(e));
+  }).then(function(){btn.disabled=false;btn.textContent='连接并同步'});
+});
+$('ghOff').addEventListener('click',function(){
+  if(!confirm('断开后，这台设备不再提交到 GitHub，令牌会从这台设备删除。这台设备上已有的记录会保留。确定断开吗？'))return;
+  try{localStorage.removeItem(GHKEY)}catch(e){}
+  gh=null;clearTimeout(sync.timer);setSync('off');toast('已断开');
+});
+window.addEventListener('online',function(){if(gh)doSync()});
+
 /* ---------- 启动 ---------- */
-render();show('home');
-photoLoadAll().then(function(all){photos=all;render()}).catch(function(){});
-document.addEventListener('visibilitychange',function(){if(!document.hidden)render()});
+setSync(sync.state);render();show('home');
+photoLoadAll().then(function(all){photos=all;render()}).catch(function(){}).then(function(){if(gh)doSync()});
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden)return;
+  render();
+  if(gh&&!sync.busy&&(!meta.last||Date.now()-meta.last>60000))doSync();
+});
 if('serviceWorker' in navigator&&location.protocol==='https:'){
   navigator.serviceWorker.register('sw.js').catch(function(){});
 }
